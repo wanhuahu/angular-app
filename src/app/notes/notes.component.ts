@@ -1,7 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
-import { FormsModule } from '@angular/forms';
-import { HttpClient } from '@angular/common/http';
+import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { finalize } from 'rxjs/operators';
 
 import { Note } from './model/notes.model';
@@ -10,17 +9,23 @@ import { NotesService } from './notes.service';
 @Component({
   selector: 'app-notes',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule],
   templateUrl: './notes.component.html',
   styleUrls: ['./notes.component.scss']
 })
 export class NotesComponent implements OnInit {
   notes: Note[] = [];
+  form: FormGroup;
   formData: Omit<Note, '_id' | 'createdAt'> = { title: '', content: '' };
   editId: string | null = null;
   isLoading = false;
 
-  constructor(private notesService: NotesService) {}
+  constructor(private notesService: NotesService, private fb: FormBuilder) {
+    this.form = this.fb.group({
+      title: ['', Validators.required],
+      content: ['', Validators.required]
+    });
+  }
 
   ngOnInit(): void {
     this.fetchNotes();
@@ -42,13 +47,16 @@ export class NotesComponent implements OnInit {
 
   handleSubmit(event: Event): void {
     event.preventDefault();
+    if (this.form.invalid) return;
+  
+    const formValue = this.form.value;
     const operation = this.editId
-      ? this.notesService.updateNote(this.editId, this.formData)
-      : this.notesService.createNote(this.formData);
-
+      ? this.notesService.updateNote(this.editId, formValue)
+      : this.notesService.createNote(formValue);
+  
     operation.subscribe({
       next: () => {
-        this.formData = { title: '', content: '' };
+        this.form.reset();
         this.editId = null;
         this.fetchNotes();
       },
@@ -66,7 +74,10 @@ export class NotesComponent implements OnInit {
   }
 
   handleEdit(note: Note): void {
-    this.formData = { title: note.title, content: note.content };
+    this.form.patchValue({
+      title: note.title,
+      content: note.content
+    });
     this.editId = note._id;
   }
 

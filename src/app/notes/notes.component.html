@@ -1,18 +1,25 @@
 <div class="max-w-4xl mx-auto p-5 font-sans">
     <h1 class="text-3xl text-gray-800 text-center mb-5">Notes</h1>
 
-    <form (submit)="handleSubmit($event)" class="bg-gray-50 p-5 rounded-lg shadow-sm mb-5">
+    <form [formGroup]="form" (submit)="handleSubmit($event)" class="bg-gray-50 p-5 rounded-lg shadow-sm mb-5">
         <div class="mb-4">
             <label class="block mb-2 font-bold text-gray-700">Title:</label>
-            <input type="text" name="title" [(ngModel)]="formData.title" required
+            <input type="text" formControlName="title" required
                 class="w-full p-2 rounded border border-gray-300 text-base" />
+            <div *ngIf="form.get('title')?.invalid && form.get('title')?.touched" class="text-red-500 text-sm">
+                Title is required
+            </div>
         </div>
         <div class="mb-4">
             <label class="block mb-2 font-bold text-gray-700">Content:</label>
-            <textarea name="content" [(ngModel)]="formData.content" required
+            <textarea formControlName="content" required
                 class="w-full p-2 rounded border border-gray-300 text-base min-h-[100px]"></textarea>
+            <div *ngIf="form.get('content')?.invalid && form.get('content')?.touched" class="text-red-500 text-sm">
+                Content is required
+            </div>
         </div>
-        <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded cursor-pointer text-base border-none">
+        <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded cursor-pointer text-base border-none"
+            [disabled]="form.invalid">
             {{ editId ? 'Update Note' : 'Add Note' }}
         </button>
     </form>
