@@ -4,13 +4,13 @@
     <form (submit)="handleSubmit($event)" class="bg-gray-50 p-5 rounded-lg shadow-sm mb-5">
         <div class="mb-4">
             <label class="block mb-2 font-bold text-gray-700">Title:</label>
-            <input type="text" name="title" [(ngModel)]="formData.title" (input)="handleInputChange($event, 'title')"
-                required class="w-full p-2 rounded border border-gray-300 text-base" />
+            <input type="text" name="title" [(ngModel)]="formData.title" required
+                class="w-full p-2 rounded border border-gray-300 text-base" />
         </div>
         <div class="mb-4">
             <label class="block mb-2 font-bold text-gray-700">Content:</label>
-            <textarea name="content" [(ngModel)]="formData.content" (input)="handleInputChange($event, 'content')"
-                required class="w-full p-2 rounded border border-gray-300 text-base min-h-[100px]"></textarea>
+            <textarea name="content" [(ngModel)]="formData.content" required
+                class="w-full p-2 rounded border border-gray-300 text-base min-h-[100px]"></textarea>
         </div>
         <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded cursor-pointer text-base border-none">
             {{ editId ? 'Update Note' : 'Add Note' }}

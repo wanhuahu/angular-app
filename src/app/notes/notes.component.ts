@@ -2,8 +2,10 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
+import { finalize } from 'rxjs/operators';
 
 import { Note } from './model/notes.model';
+import { NotesService } from './notes.service';
 
 @Component({
   selector: 'app-notes',
@@ -13,14 +15,12 @@ import { Note } from './model/notes.model';
   styleUrls: ['./notes.component.scss']
 })
 export class NotesComponent implements OnInit {
-  private API_BASE_URL = 'http://localhost:3001';
-
   notes: Note[] = [];
-  formData = { title: '', content: '' };
+  formData: Omit<Note, '_id' | 'createdAt'> = { title: '', content: '' };
   editId: string | null = null;
   isLoading = false;
 
-  constructor(private http: HttpClient) {}
+  constructor(private notesService: NotesService) {}
 
   ngOnInit(): void {
     this.fetchNotes();
@@ -28,60 +28,46 @@ export class NotesComponent implements OnInit {
 
   fetchNotes(): void {
     this.isLoading = true;
-    this.http.get<Note[]>(`${this.API_BASE_URL}/notes`).subscribe({
-      next: (data) => {
-        this.notes = data.sort(
-          (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-        );
-      },
-      error: (error) => {
-        console.error('Error fetching notes:', error);
-      },
-      complete: () => {
-        this.isLoading = false;
-      }
-    });
-  }
-
-  handleInputChange(event: Event, field: 'title' | 'content'): void {
-    const target = event.target as HTMLInputElement | HTMLTextAreaElement;
-    this.formData = { ...this.formData, [field]: target.value };
+    this.notesService.getAllNotes()
+      .pipe(finalize(() => this.isLoading = false))
+      .subscribe({
+        next: (data) => {
+          this.notes = data.sort(
+            (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+          );
+        },
+        error: (error) => console.error('Error fetching notes:', error)
+      });
   }
 
   handleSubmit(event: Event): void {
     event.preventDefault();
-    const request = this.editId
-      ? this.http.put(`${this.API_BASE_URL}/notes/${this.editId}`, this.formData)
-      : this.http.post(`${this.API_BASE_URL}/notes`, this.formData);
+    const operation = this.editId
+      ? this.notesService.updateNote(this.editId, this.formData)
+      : this.notesService.createNote(this.formData);
 
-    request.subscribe({
+    operation.subscribe({
       next: () => {
         this.formData = { title: '', content: '' };
         this.editId = null;
         this.fetchNotes();
       },
-      error: (error) => {
-        console.error('Error saving note:', error);
-      }
+      error: (error) => console.error('Error saving note:', error)
     });
+  }
+
+  handleDelete(id: string): void {
+    if (confirm('Are you sure you want to delete this note?')) {
+      this.notesService.deleteNote(id).subscribe({
+        next: () => this.fetchNotes(),
+        error: (error) => console.error('Error deleting note:', error)
+      });
+    }
   }
 
   handleEdit(note: Note): void {
     this.formData = { title: note.title, content: note.content };
     this.editId = note._id;
-  }
-
-  handleDelete(id: string): void {
-    if (confirm('Are you sure you want to delete this note?')) {
-      this.http.delete(`${this.API_BASE_URL}/notes/${id}`).subscribe({
-        next: () => {
-          this.fetchNotes();
-        },
-        error: (error) => {
-          console.error('Error deleting note:', error);
-        }
-      });
-    }
   }
 
   formatDate(dateString: string): string {
