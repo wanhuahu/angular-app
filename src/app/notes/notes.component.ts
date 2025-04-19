@@ -3,12 +3,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 
-interface Note {
-  _id: string;
-  title: string;
-  content: string;
-  createdAt: string;
-}
+import { Note } from './model/notes.model';
 
 @Component({
   selector: 'app-notes',
