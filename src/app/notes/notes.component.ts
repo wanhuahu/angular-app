@@ -6,7 +6,6 @@ import { finalize } from 'rxjs/operators';
 import { Note } from './model/notes.model';
 import { NotesService } from './notes.service';
 
-// Component
 @Component({
   selector: 'app-notes',
   standalone: true,
